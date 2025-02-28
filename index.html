@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Stadium VG</title>
+    <style>
+        /* Base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            background: linear-gradient(135deg, #121212, #2c3e50);
+            background-size: cover;
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+        
+        .battle-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: rgba(30, 30, 30, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        h1 {
+            color: #ffcb05;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            -webkit-text-stroke: 1px #3c5aa6;
+        }
+        
+        /* Setup area */
+        .setup-area {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 15px;
+            background: rgba(40, 40, 40, 0.8);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        #player-select {
+            padding: 12px 15px;
+            border-radius: 30px;
+            border: 2px solid #3c5aa6;
+            width: 250px;
+            font-size: 16px;
+            margin: 10px;
+            outline: none;
+            transition: all 0.3s;
+            background-color: #333;
+            color: #e0e0e0;
+        }
+        
+        #player-select:focus {
+            border-color: #ffcb05;
+            box-shadow: 0 0 10px rgba(255, 203, 5, 0.5);
+        }
+        
+        label {
+            font-weight: bold;
+            color: #4f78e2;
+            font-size: 18px;
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        button {
+            background: linear-gradient(to bottom, #ffcb05, #c7a008);
+            color: #333;
+            font-weight: bold;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s;
+            text-transform: uppercase;
+            margin: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        /* Battle area */
+        #battle-area {
+            display: none;
+            position: relative;
+            margin-top: 30px;
+            background-image: url('bg.jpg');
+            background-size: cover;
+            background-position: center;
+            filter: brightness(0.8) contrast(1.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+            min-height: 400px;
+        }
+        
+        /* Battle field overlay */
+        #battle-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            z-index: 1;
+        }
+        
+        /* Move all content above the overlay */
+        #battle-area > * {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .pokemon-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+        
+        .pokemon-stats {
+            background: rgba(30, 30, 30, 0.85);
+            border-radius: 15px;
+            padding: 15px;
+            width: 45%;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+            margin: 10px;
+            border: 1px solid #444;
+        }
+        
+        .pokemon {
+            width: 150px;
+            height: 150px;
+            filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5));
+            transition: transform 0.2s;
+        }
+        
+        h2 {
+            color: #4f78e2;
+            margin: 10px 0;
+            font-size: 1.5rem;
+            text-transform: capitalize;
+        }
+        
+        .hp-container {
+            width: 100%;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+            border: 1px solid #444;
+        }
+        
+        .hp-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, #ff0000, #ff6b6b);
+            transition: width 0.5s;
+        }
+        
+        #battle-log {
+            background: rgba(30, 30, 30, 0.9);
+            padding: 15px;
+            border-radius: 15px;
+            margin: 20px 0;
+            color: #e0e0e0;
+            font-size: 18px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+            min-height: 60px;
+            border: 1px solid #444;
+        }
+        
+        .moves {
+            margin: 15px 0;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .moves button {
+            background: linear-gradient(to bottom, #4CAF50, #2E7D32);
+            color: white;
+            font-size: 16px;
+            text-transform: capitalize;
+            margin: 8px;
+            transition: all 0.3s;
+        }
+        
+        .moves button:hover {
+            background: linear-gradient(to bottom, #66BB6A, #43A047);
+        }
+        
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px) rotate(-5deg); }
+            50% { transform: translateX(10px) rotate(5deg); }
+            75% { transform: translateX(-10px) rotate(-5deg); }
+            100% { transform: translateX(0); }
+        }
+        
+        /* Audio controls */
+        .audio-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(40, 40, 40, 0.7);
+            border-radius: 30px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .toggle-btn {
+            background: #333;
+            color: #e0e0e0;
+            border: 2px solid #4f78e2;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            transition: all 0.3s;
+        }
+        
+        .toggle-btn:hover {
+            background: #4f78e2;
+            color: #fff;
+            transform: scale(1.1);
+        }
+        
+        .toggle-btn.active {
+            background: #ffcb05;
+            color: #333;
+            border-color: #ffcb05;
+        }
+        
+        .volume-control {
+            width: 100px;
+            margin: 0 15px;
+        }
+        
+        /* Battlefield decorations */
+        .battle-decoration {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .grass-tuft {
+            position: absolute;
+            width: 30px;
+            height: 40px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 40"><path d="M15,0 C20,15 25,25 30,40 L0,40 C5,25 10,15 15,0" fill="%23215B21"/></svg>') no-repeat;
+            opacity: 0.7;
+        }
+        
+        .grass-tuft-1 {
+            bottom: 5px;
+            left: 10%;
+        }
+        
+        .grass-tuft-2 {
+            bottom: 3px;
+            left: 25%;
+            transform: scaleX(-1);
+        }
+        
+        .grass-tuft-3 {
+            bottom: 6px;
+            right: 15%;
+        }
+        
+        .grass-tuft-4 {
+            bottom: 4px;
+            right: 30%;
+            transform: scaleX(-1);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .battle-container {
+                padding: 15px;
+                margin: 10px;
+            }
+            
+            .pokemon-container {
+                flex-direction: column;
+            }
+            
+            .pokemon-stats {
+                width: 90%;
+                margin: 10px 0;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .audio-controls {
+                flex-direction: column;
+                padding: 15px;
+            }
+            
+            .volume-control {
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="battle-container">
+        <h1>Pokémon Stadium VG</h1>
+        
+        <div class="audio-controls">
+            <button id="music-toggle" class="toggle-btn" style="height: 60px;">
+                ♪
+            </button>
+            <input type="range" id="volume-control" class="volume-control" min="0" max="1" step="0.1" value="0.5">
+            <span id="volume-label">50%</span>
+            <br>
+        </div>
+        <p>The music stops when the battle ends. Press the music button to restart it.</p>
+        
+        <div class="setup-area">
+            <label for="player-select">Choose your Pokémon:</label>
+            <input type="text" id="player-select" placeholder="Enter Pokémon name">
+            <button onclick="startBattle()">Start Battle</button>
+        </div>
+        
+        <div id="battle-area">
+            <!-- Decorative grass tufts -->
+            <div class="battle-decoration grass-tuft grass-tuft-1"></div>
+            <div class="battle-decoration grass-tuft grass-tuft-2"></div>
+            <div class="battle-decoration grass-tuft grass-tuft-3"></div>
+            <div class="battle-decoration grass-tuft grass-tuft-4"></div>
+            
+            <div class="pokemon-container">
+                <div class="pokemon-stats">
+                    <h2>Enemy Pokémon</h2>
+                    <img id="enemy-img" class="pokemon">
+                    <div class="hp-container">
+                        <div class="hp-bar" id="enemy-hp"></div>
+                    </div>
+                </div>
+                
+                <div class="pokemon-stats">
+                    <h2>Your Pokémon</h2>
+                    <img id="player-img" class="pokemon">
+                    <div class="hp-container">
+                        <div class="hp-bar" id="player-hp"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 id="battle-log">Choose a move!</h3>
+            <div class="moves" id="move-buttons"></div>
+        </div>
+    </div>
+    
+    <audio id="attack-sound" src="Super Effective - Pokemon Sound Effects.mp3"></audio>
+    <audio id="background-music" loop>
+        <source src="Battle! (Trainer Battle) - Pokémon X  Pokémon Y - Super Smash Bros. Ultimate.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="win-sound" src="Pokemon Unite Sound Effects - Announcer Victory.mp3"></audio>
+    <audio id="lose-sound" src="Pokemon Unite Sound Effects - Announcer Lose.mp3"></audio>
+    
+    <script>
+        let player, enemy;
+        const backgroundMusic = document.getElementById("background-music");
+        const musicToggle = document.getElementById("music-toggle");
+        const volumeControl = document.getElementById("volume-control");
+        const volumeLabel = document.getElementById("volume-label");
+        const winSound = document.getElementById("win-sound");
+        const loseSound = document.getElementById("lose-sound");
+        let isMusicPlaying = false;
+        
+        // Background music controls
+        musicToggle.addEventListener("click", toggleMusic);
+        volumeControl.addEventListener("input", adjustVolume);
+        
+        function toggleMusic() {
+            if (isMusicPlaying) {
+                backgroundMusic.pause();
+                musicToggle.classList.remove("active");
+                musicToggle.innerHTML = "♪";
+            } else {
+                backgroundMusic.play();
+                musicToggle.classList.add("active");
+                musicToggle.innerHTML = "♫";
+            }
+            isMusicPlaying = !isMusicPlaying;
+        }
+        
+        function adjustVolume() {
+            const volume = volumeControl.value;
+            backgroundMusic.volume = volume;
+            winSound.volume = volume;
+            loseSound.volume = volume;
+            volumeLabel.textContent = Math.round(volume * 100) + "%";
+        }
+        
+        async function fetchPokemon(pokemonName) {
+            const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonName.toLowerCase()}`);
+            const data = await response.json();
+            return {
+                name: data.name,
+                hp: data.stats[0].base_stat * 2, 
+                sprite: data.sprites.other["official-artwork"].front_default,
+                moves: data.moves.slice(0, 4).map(m => ({ name: m.move.name, power: Math.floor(Math.random() * 40) + 10 }))
+            };
+        }
+        
+        async function startBattle() {
+            const playerInput = document.getElementById("player-select").value;
+            player = await fetchPokemon(playerInput);
+            const randomEnemyId = Math.floor(Math.random() * 151) + 1;
+            enemy = await fetchPokemon(randomEnemyId.toString());
+            
+            document.getElementById("player-img").src = player.sprite;
+            document.getElementById("enemy-img").src = enemy.sprite;
+            document.getElementById("player-hp").style.width = "100%";
+            document.getElementById("enemy-hp").style.width = "100%";
+            document.getElementById("battle-area").style.display = "block";
+            
+            let moveButtons = document.getElementById("move-buttons");
+            moveButtons.innerHTML = "";
+            let btn = document.createElement("button");
+            btn.textContent = "Attack";
+            btn.onclick = () => attack({ name: "Attack", power: Math.floor(Math.random() * 40) + 10 });
+            moveButtons.appendChild(btn);
+        }
+        
+        function attack(move) {
+            document.getElementById("attack-sound").play();
+            enemy.hp -= move.power;
+            document.getElementById("enemy-img").classList.add("shake");
+            setTimeout(() => document.getElementById("enemy-img").classList.remove("shake"), 500);
+            
+            if (enemy.hp < 0) enemy.hp = 0;
+            document.getElementById("enemy-hp").style.width = (enemy.hp / 200) * 100 + "%";
+            document.getElementById("battle-log").textContent = `${player.name} used its attack!`;
+            if (enemy.hp === 0) {
+                document.getElementById("battle-log").textContent = "You win!";
+                if (isMusicPlaying) {
+                    backgroundMusic.pause();
+                }
+                winSound.play();
+                return;
+            }
+            setTimeout(enemyAttack, 1000);
+        }
+        
+        function enemyAttack() {
+            document.getElementById("attack-sound").play();
+            let move = enemy.moves[Math.floor(Math.random() * enemy.moves.length)];
+            player.hp -= move.power;
+            document.getElementById("player-img").classList.add("shake");
+            setTimeout(() => document.getElementById("player-img").classList.remove("shake"), 500);
+            
+            if (player.hp < 0) player.hp = 0;
+            document.getElementById("player-hp").style.width = (player.hp / 200) * 100 + "%";
+            document.getElementById("battle-log").textContent = `${enemy.name} used its attack!`;
+            if (player.hp === 0) {
+                document.getElementById("battle-log").textContent = "You lost!";
+                if (isMusicPlaying) {
+                    backgroundMusic.pause();
+                }
+                loseSound.play();
+            }
+        }
+    </script>
+</body>
+</html>
